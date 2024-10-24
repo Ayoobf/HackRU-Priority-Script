@@ -78,13 +78,13 @@ The script looks for sponsor scanning data in this MongoDB structure:
 {
   "day_of": {
     "event": {
-      "sponsor1@company.com": {
-        "orgSponsorB": {
+      "sponsor1@company.com": {    <--- Searches for this sponsor email, Sponsor1
+        "orgSponsorB": {           <--- Puts this user in the B list of sponsor1
           "attend": 1,
           "time": ["timestamp"]
         }
-      },"sponsor2@company.com": {
-        "orgSponsorA": {
+      },"sponsor2@company.com": {  <--- Sponsor2
+        "orgSponsorA": {           <--- Puts the user in the A list of sponsor2
           "attend": 1,
           "time": ["timestamp"]
         }
