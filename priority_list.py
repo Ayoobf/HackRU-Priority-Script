@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-import json
+import csv
 
 load_dotenv()
 
@@ -104,17 +104,57 @@ def get_sponsor_list(sponsor_email: str):
         print(f"Error in get_sponsor_list: {e}")
         return None, None
 
+
+def generate_report(sponsor_email: str):
+    """
+    Generates two CSV files (list A and list B) for a sponsor containing user details.
+    """
+    list_a, list_b = get_sponsor_list(sponsor_email)
+    sponsor_name = sponsor_email.split("@")[0]
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Generate List A CSV
+    if list_a:
+        file_name_a = f"{sponsor_name}_list_A_{timestamp}.csv"
+        with open(file_name_a, "w", newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["First Name", "Last Name", "Email"]) # Head
+            for user in list_a:
+                writer.writerow([
+                    user.get("first_name", ""),
+                    user.get("last_name", ""),
+                    user.get("email","")
+                ])
+        print(f"List A saved to: {file_name_a}")
+
+    # Generate List B CSV
+    if list_b:
+        file_name_b = f"{sponsor_name}_list_B_{timestamp}.csv"
+        with open(file_name_b, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["First Name", "Last Name", "Email"])  # Head
+            for user in list_a:
+                writer.writerow(
+                    [
+                        user.get("first_name", ""),
+                        user.get("last_name", ""),
+                        user.get("email", ""),
+                    ]
+                )
+        print(f"List B saved to: {file_name_b}")
+
+def generate_all_sponsor_csv():
+    """Generates all the reports for every sponsor in the database"""        
+    sponsor_emails = get_all_sponsor_events()
+    if not sponsor_emails:
+        print("No sponsor events found")
+        return
+
+    for sponsor in sponsor_emails:
+        print(f"\nGenerating reports for {sponsor}")
+        generate_report(sponsor)
+
+
 if __name__ == "__main__":
     # Get all sponsor emails
-    sponsor_emails = get_all_sponsor_events()
-
-    if sponsor_emails:
-        # Get lists for each sponsor
-        for sponsor_email in sponsor_emails:
-            list_a, list_b = get_sponsor_list(sponsor_email)
-            print(f"\nResults for {sponsor_email}:")
-            if list_a:
-                print("List A users:", [user["email"] for user in list_a])
-            if list_b:
-                print("List B users:", [user["email"] for user in list_b])
-            print("-" * 50)
+    generate_all_sponsor_csv()
