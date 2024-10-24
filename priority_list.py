@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import csv
 
 load_dotenv()
+TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
+REPORTS_DIR = f"reports_{TIMESTAMP}"
 
 
 def connect_to_mongodb():
@@ -111,11 +113,10 @@ def generate_report(sponsor_email: str):
     """
     list_a, list_b = get_sponsor_list(sponsor_email)
     sponsor_name = sponsor_email.split("@")[0]
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
+    
     # Generate List A CSV
     if list_a:
-        file_name_a = f"{sponsor_name}_list_A_{timestamp}.csv"
+        file_name_a = f"{REPORTS_DIR}/{sponsor_name}_list_A.csv"
         with open(file_name_a, "w", newline='') as f:
             writer = csv.writer(f)
             writer.writerow(["First Name", "Last Name", "Email"]) # Head
@@ -129,11 +130,11 @@ def generate_report(sponsor_email: str):
 
     # Generate List B CSV
     if list_b:
-        file_name_b = f"{sponsor_name}_list_B_{timestamp}.csv"
+        file_name_b = f"{REPORTS_DIR}/{sponsor_name}_list_B.csv"
         with open(file_name_b, "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["First Name", "Last Name", "Email"])  # Head
-            for user in list_a:
+            for user in list_b:
                 writer.writerow(
                     [
                         user.get("first_name", ""),
@@ -144,17 +145,22 @@ def generate_report(sponsor_email: str):
         print(f"List B saved to: {file_name_b}")
 
 def generate_all_sponsor_csv():
-    """Generates all the reports for every sponsor in the database"""        
+    """Generates all the reports for every sponsor "detected" in the database"""        
     sponsor_emails = get_all_sponsor_events()
     if not sponsor_emails:
         print("No sponsor events found")
         return
 
+    # Create reports directory once at the start
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+    print(f"\nCreated reports directory: {REPORTS_DIR}")
+
     for sponsor in sponsor_emails:
         print(f"\nGenerating reports for {sponsor}")
         generate_report(sponsor)
 
+    print(f"\nAll reports have been generated in: {REPORTS_DIR}")
 
 if __name__ == "__main__":
-    # Get all sponsor emails
+    
     generate_all_sponsor_csv()
